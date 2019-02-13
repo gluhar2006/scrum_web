@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <title>
+    Scrum?
+  </title>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'socket.io.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'app.js') }}"></script>
+</head>
+
+<body>
+
+<input type="text" id="login" placeholder="Your name here">
+
+<br>
+<button onclick="connect()">connect</button>
+<button onclick="disconnect()">disconnect</button>
+<br>
+state: <input type="text" id="socket_state" placeholder="please, login"></input>
+
+<br><br>
+<input type="text" id="resp_auth" placeholder="server says...">
+
+<br><br>
+<textarea id="serv_reply" placeholder="poll results will be here"></textarea>
+
+
+<br>
+<input type="text" id="mark" placeholder="your mark here">
+<br>
+<button onclick="vote()">vote</button>
+
+<br><br>
+<button onclick="reset_poll()">reset poll</button>
+
+
+</body>
+
+</html>
