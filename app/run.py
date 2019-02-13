@@ -40,7 +40,6 @@ def poll(data):
         emit('auth_resp', 'please, enter your name and reconnect')
     else:
         mark = data.get('mark')
-        print(mark)
         pollResults[login] = {'state': True, 'mark': mark}
 
         if len([name for name in pollResults if pollResults[name]['state'] is True]) == len(pollResults):

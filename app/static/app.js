@@ -48,10 +48,3 @@ function reset_poll() {
 function vote() {
   socket.emit('poll', {'login': myName, 'mark': document.getElementById('mark').value});
 }
-
-function clk() {
-  if (socket)
-    socket.emit('message', document.getElementById('str_data').value);
-  console.log('click' + document.getElementById('str_data').value);
-}
-
