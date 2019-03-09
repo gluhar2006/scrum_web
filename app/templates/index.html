@@ -15,7 +15,7 @@
 
 <body style="background-color: #E8F6F3">
 
-  <div id="sLogin" style="margin-top: 5%; visibility: inherit" align="center">
+  <div id="sLogin" style="margin-top: 1%; visibility: inherit" align="center">
 
     <h2>Login</h2>
 
@@ -33,21 +33,21 @@
 
     <textarea id="serv_reply" placeholder="poll results will be here" class="form-control" style="width: 20%;margin-top: 1%; resize: none" disabled></textarea>
 
-    <div class="btn-group btn-group-justified" style="width: 30%; margin-top: 1%">
-      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(1)" title="1">1</button>
-      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(2)" title="2">2</button>
+    <div id="gr_1" class="btn-group btn-group-justified" style="width: 30%; margin-top: 1%">
+      <button id="vote_1" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(1)" title="1">1</button>
+      <button id="vote_2" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(2)" title="2">2</button>
     </div>
-    <div class="btn-group btn-group-justified" style="width: 30%;">
-      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(3)" title="3">3</button>
-      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(5)" title="5">5</button>
-      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(8)" title="8">8</button>
+    <div id="gr_2" class="btn-group btn-group-justified" style="width: 30%;">
+      <button id="vote_3" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(3)" title="3">3</button>
+      <button id="vote_5" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(5)" title="5">5</button>
+      <button id="vote_8" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(8)" title="8">8</button>
     </div>
-    <div class="btn-group btn-group-justified" style="width: 30%;">
-      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(9)" title="9">decompose</button>
-      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(0)" title="0">xz</button>
+    <div id="gr_3" class="btn-group btn-group-justified" style="width: 30%;">
+      <button id="vote_9" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(9)" title="9">decompose</button>
+      <button id="vote_0" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(0)" title="0">xz</button>
     </div>
-    <div class="btn-group btn-group-justified" style="width: 30%;">
-      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 60%" onclick="vote(-1)" title="-1">clear my mark</button>
+    <div id="gr_4" class="btn-group btn-group-justified" style="width: 30%;">
+      <button id="vote_c" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 60%" onclick="vote(-1)" title="-1">clear my mark</button>
     </div>
 
     <input type="password" id="mark" placeholder="or hide your mark here" class="form-control" style="width: 20%;margin-top: 1%">

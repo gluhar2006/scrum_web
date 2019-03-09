@@ -3,6 +3,34 @@ let myName = null;
 
 setTimeout(show_state, 200);
 
+let updSizes = function () {
+    document.body.style.zoom = '120%';
+
+    let fieldsWidths = [20, 30, 60];
+
+    isMobile = window.innerHeight * 1.5 > window.innerWidth;
+
+    if (isMobile)
+        for (val in fieldsWidths)
+            fieldsWidths[val] *= 1.5;
+
+    for (elementId of ['login', 'socket_state', 'resp_auth', 'serv_reply', 'vote_3', 'vote_5', 'vote_8', 'mark'])
+        document.getElementById(elementId).style.width = fieldsWidths[0].toString()+'%';
+    for (elementId of ['gr_1', 'gr_2', 'gr_3', 'gr_4', 'vote_1', 'vote_2', 'vote_9', 'vote_0'])
+        document.getElementById(elementId).style.width = fieldsWidths[1].toString()+'%';
+    for (elementId of ['vote_c'])
+        document.getElementById(elementId).style.width = fieldsWidths[2].toString()+'%';
+};
+
+
+window.onload = function () {
+    updSizes();
+};
+
+// window.onresize = function () {
+//     updSizes();
+// };
+
 function show_state() {
     if (socket && socket.connected === true)
         if (myName !== null) {
