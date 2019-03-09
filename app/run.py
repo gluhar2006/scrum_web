@@ -22,9 +22,11 @@ def getMark(name: str):
 
 
 def emitComment():
-    msg = 'voting is over'
     nameAndMarkDict = {k: v['mark'] for k, v in pollResults.items()}
     markList = list(nameAndMarkDict.values())
+    markListWithNumbers = [int(m) for m in markList if m in POSSIBLE_MARKS[2:-1]]
+    averageMark = sum(markListWithNumbers)/len(markListWithNumbers)
+    msg = f'Voting is over. Average mark is {averageMark}'
     marksCount = len(set(markList))
     if marksCount == 1:
         msg = f'Unanimously! {markList[0]}!'
@@ -45,8 +47,14 @@ def emitResults():
             emitComment()
         except:
             pass
+        completedPerc = "100%"
     else:
         resp = [{'name': name, 'state': pollResults[name]['state']} for name in pollResults]
+        if len(resp):
+            completedPerc = f"{100 * len([q for q in resp if q.get('state')]) / len(pollResults)}%"
+        else:
+            completedPerc = "0%"
+    resp.append({'perc_complete': completedPerc})
     emit('poll', resp, broadcast=True)
 
 

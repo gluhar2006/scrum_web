@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>
-    Scrum-login
+    Scrum poker v 0.1
   </title>
   <link rel="stylesheet" href="{{ url_for('static', filename = 'bootstrap.min.css') }}">
   <script type="text/javascript" src="{{ url_for('static', filename = 'socket.io.min.js') }}"></script>
@@ -15,46 +15,98 @@
 
 <body style="background-color: #E8F6F3">
 
-  <div id="sLogin" style="margin-top: 1%; visibility: inherit" align="center">
+<div class="container">
 
-    <h2>Login</h2>
+  <div class="panel-group" id="accordion">
 
-    <input type="text" class="form-control" id="login" placeholder="Your name here" style="width: 20%;background-color: #E8F8F5">
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title" align="center">
+          <a onclick="showLogin()">Login panel</a>
+        </h4>
+      </div>
 
-    <button id="connect_button" onclick="connect()" class="btn btn-default" style="margin-top: 1%; background-color: #E8F8F5; visibility: visible">connect</button>
-    <button id="disconnect_button" onclick="disconnect()" class="btn btn-default" style="margin-top: 1%; background-color: #E8F8F5; visibility: hidden">disconnect</button>
+      <div id="sLogin" style="margin-top: 1%; margin-bottom: 2%;visibility: inherit" align="center"
+           class="panel-collapse collapse in">
 
-    <input type="text" class="form-control" id="socket_state" placeholder="please, login" style="width: 20%; margin-top: 1%; background-color: #E8F8F5"></input>
+        <h2>Login</h2>
+
+        <input type="text" class="form-control" id="login" placeholder="Your name here"
+               style=";background-color: #DDECEE">
+
+        <button id="connect_button" onclick="connect()" class="btn btn-default"
+                style="margin-top: 1%; background-color: #DDECEE; visibility: visible">connect
+        </button>
+        <button id="disconnect_button" onclick="disconnect()" class="btn btn-default"
+                style="margin-top: 1%; background-color: #DDECEE; visibility: hidden">disconnect
+        </button>
+
+        <input type="text" class="form-control" id="socket_state" placeholder="please, login"
+               style="margin-top: 1%; background-color: #DDECEE"></input>
+
+      </div>
+
+    </div>
+
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h4 class="panel-title" align="center">
+          <a onclick="showPool()">Pool</a>
+        </h4>
+      </div>
+
+      <div class="progress">
+        <div id="progressBar" class="progress-bar progress-bar-success" role="progressbar" aria-valuenow="0"
+             aria-valuemin="0" aria-valuemax="100" style="width:0%">Progress
+        </div>
+      </div>
+
+      <div id="sPool" style="margin-top: 2%; margin-bottom: 2%" align="center" class="panel-collapse collapse">
+        <input type="text" class="form-control" id="resp_auth" placeholder="server says...">
+
+        <textarea id="serv_reply" placeholder="poll results will be here" class="form-control"
+                  style="margin-top: 1%; resize: none" disabled></textarea>
+
+        <div id="gr_1" class="btn-group btn-group-justified" style="; margin-top: 1%">
+          <div id="vote_1" class="btn btn-default" style="background-color: #DDECEE;" onclick="vote(1)" title="1">1
+          </div>
+          <div id="vote_2" class="btn btn-default" style="background-color: #DDECEE;" onclick="vote(2)" title="2">2
+          </div>
+          <div id="vote_3" class="btn btn-default" style="background-color: #DDECEE;" onclick="vote(3)" title="3">3
+          </div>
+          <div id="vote_5" class="btn btn-default" style="background-color: #DDECEE;" onclick="vote(5)" title="5">5
+          </div>
+        </div>
+        <div id="gr_2" class="btn-group btn-group-justified" style=";">
+          <div id="vote_8" class="btn btn-default" style="background-color: #DDECEE;" onclick="vote(8)" title="8">8
+          </div>
+          <div id="vote_9" class="btn btn-default" style="background-color: #DDECEE;" onclick="vote(9)" title="9">
+            decompose
+          </div>
+          <div id="vote_0" class="btn btn-default" style="background-color: #DDECEE;" onclick="vote(0)" title="0">xz
+          </div>
+          <div id="vote_c" class="btn btn-default" style="background-color: #DDECEE;" onclick="vote(-1)" title="-1">
+            clear my mark
+          </div>
+        </div>
+
+        <input type="password" id="mark" placeholder="---or hide your mark here---" class="form-control"
+               style=";margin-top: 1%">
+        <button onclick="vote()" class="btn btn-default" style="margin-top: 1%; background-color: #DDECEE"
+                title="vote with mark entered manually">vote hidden
+        </button>
+        <button onclick="reset_poll()" class="btn btn-default" style="margin-top: 1%; background-color: #DDECEE"
+                title="start new pool (reset marks)">reset poll
+        </button>
+        <button onclick="reset_users()" class="btn btn-default" style="margin-top: 1%; background-color: #DDECEE"
+                title="reset users (if there is one or more improperly closed connections)">reset users
+        </button>
+
+      </div>
+    </div>
 
   </div>
-
-  <div id="sPool" style="margin-top: 2%" align="center">
-    <input type="text" class="form-control" id="resp_auth" placeholder="server says..." style="width: 20%">
-
-    <textarea id="serv_reply" placeholder="poll results will be here" class="form-control" style="width: 20%;margin-top: 1%; resize: none" disabled></textarea>
-
-    <div id="gr_1" class="btn-group btn-group-justified" style="width: 30%; margin-top: 1%">
-      <button id="vote_1" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(1)" title="1">1</button>
-      <button id="vote_2" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(2)" title="2">2</button>
-    </div>
-    <div id="gr_2" class="btn-group btn-group-justified" style="width: 30%;">
-      <button id="vote_3" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(3)" title="3">3</button>
-      <button id="vote_5" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(5)" title="5">5</button>
-      <button id="vote_8" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(8)" title="8">8</button>
-    </div>
-    <div id="gr_3" class="btn-group btn-group-justified" style="width: 30%;">
-      <button id="vote_9" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(9)" title="9">decompose</button>
-      <button id="vote_0" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(0)" title="0">xz</button>
-    </div>
-    <div id="gr_4" class="btn-group btn-group-justified" style="width: 30%;">
-      <button id="vote_c" type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 60%" onclick="vote(-1)" title="-1">clear my mark</button>
-    </div>
-
-    <input type="password" id="mark" placeholder="or hide your mark here" class="form-control" style="width: 20%;margin-top: 1%">
-    <button onclick="vote()" class="btn btn-default" style="margin-top: 1%">vote</button>
-    <button onclick="reset_poll()" class="btn btn-default" style="margin-top: 1%">reset poll</button>
-    <button onclick="reset_users()" class="btn btn-default" style="margin-top: 1%">reset users</button>
-  </div>
+</div>
 
 </body>
 
