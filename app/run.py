@@ -36,7 +36,7 @@ def emitComment():
                 revResults = dict(zip(nameAndMarkDict.values(), nameAndMarkDict.keys()))
                 popularMark = [m for m in markList if m != mark][0]
                 msg = f'All voted {popularMark}, except for {revResults[mark]} - voted {getMark(revResults[mark])}'
-    emit('auth_resp', msg, broadcast=True)
+    emit('auth_resp', 'Not sure, but '+msg, broadcast=True)
 
 
 def emitResults():

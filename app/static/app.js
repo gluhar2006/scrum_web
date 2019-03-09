@@ -83,8 +83,13 @@ socket.on('auth_resp', function (msg) {
 socket.on('poll', function (results) {
   let output = '';
   for (let res of results) {
-    if (res.hasOwnProperty('perc_complete'))
+    if (res.hasOwnProperty('perc_complete')) {
       document.getElementById('progressBar').style.width = res['perc_complete'];
+      if (res['perc_complete'] === '100%')
+        $('#progressBar').removeClass().addClass('progress-bar progress-bar-success');
+      else
+        $('#progressBar').removeClass().addClass('progress-bar progress-bar-success progress-bar-striped');
+    }
     else {
       output += res['name'];
       if (res['state'] === true) {
