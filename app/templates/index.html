@@ -2,38 +2,59 @@
 <html>
 
 <head>
+  <meta charset="UTF-8">
   <title>
-    Scrum?
+    Scrum-login
   </title>
+  <link rel="stylesheet" href="{{ url_for('static', filename = 'bootstrap.min.css') }}">
   <script type="text/javascript" src="{{ url_for('static', filename = 'socket.io.min.js') }}"></script>
   <script type="text/javascript" src="{{ url_for('static', filename = 'app.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'jquery.min.js') }}"></script>
+  <script type="text/javascript" src="{{ url_for('static', filename = 'bootstrap.min.js') }}"></script>
 </head>
 
-<body>
+<body style="background-color: #E8F6F3">
 
-<input type="text" id="login" placeholder="Your name here">
+  <div id="sLogin" style="margin-top: 5%; visibility: inherit" align="center">
 
-<br>
-<button onclick="connect()">connect</button>
-<button onclick="disconnect()">disconnect</button>
-<br>
-state: <input type="text" id="socket_state" placeholder="please, login"></input>
+    <h2>Login</h2>
 
-<br><br>
-<input type="text" id="resp_auth" placeholder="server says...">
+    <input type="text" class="form-control" id="login" placeholder="Your name here" style="width: 20%;background-color: #E8F8F5">
 
-<br><br>
-<textarea id="serv_reply" placeholder="poll results will be here"></textarea>
+    <button id="connect_button" onclick="connect()" class="btn btn-default" style="margin-top: 1%; background-color: #E8F8F5; visibility: visible">connect</button>
+    <button id="disconnect_button" onclick="disconnect()" class="btn btn-default" style="margin-top: 1%; background-color: #E8F8F5; visibility: hidden">disconnect</button>
 
+    <input type="text" class="form-control" id="socket_state" placeholder="please, login" style="width: 20%; margin-top: 1%; background-color: #E8F8F5"></input>
 
-<br>
-<input type="text" id="mark" placeholder="your mark here">
-<br>
-<button onclick="vote()">vote</button>
+  </div>
 
-<br><br>
-<button onclick="reset_poll()">reset poll</button>
+  <div id="sPool" style="margin-top: 2%" align="center">
+    <input type="text" class="form-control" id="resp_auth" placeholder="server says..." style="width: 20%">
 
+    <textarea id="serv_reply" placeholder="poll results will be here" class="form-control" style="width: 20%;margin-top: 1%; resize: none" disabled></textarea>
+
+    <div class="btn-group btn-group-justified" style="width: 30%; margin-top: 1%">
+      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(1)" title="1">1</button>
+      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(2)" title="2">2</button>
+    </div>
+    <div class="btn-group btn-group-justified" style="width: 30%;">
+      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(3)" title="3">3</button>
+      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(5)" title="5">5</button>
+      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 20%" onclick="vote(8)" title="8">8</button>
+    </div>
+    <div class="btn-group btn-group-justified" style="width: 30%;">
+      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(9)" title="9">decompose</button>
+      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 30%" onclick="vote(0)" title="0">xz</button>
+    </div>
+    <div class="btn-group btn-group-justified" style="width: 30%;">
+      <button type="button" class="btn btn-default" style="background-color: #E8F8F5;width: 60%" onclick="vote(-1)" title="-1">clear my mark</button>
+    </div>
+
+    <input type="password" id="mark" placeholder="or hide your mark here" class="form-control" style="width: 20%;margin-top: 1%">
+    <button onclick="vote()" class="btn btn-default" style="margin-top: 1%">vote</button>
+    <button onclick="reset_poll()" class="btn btn-default" style="margin-top: 1%">reset poll</button>
+    <button onclick="reset_users()" class="btn btn-default" style="margin-top: 1%">reset users</button>
+  </div>
 
 </body>
 

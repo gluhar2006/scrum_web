@@ -4,25 +4,27 @@ let myName = null;
 setTimeout(show_state, 200);
 
 function show_state() {
-    document.getElementById('socket_state').value = 'disconnected';
     if (socket && socket.connected === true)
         if (myName !== null) {
-            document.getElementById('socket_state').value = 'connected';
+            document.getElementById('socket_state').value = 'status: connected';
+            document.getElementById('connect_button').style.visibility = 'hidden';
+            document.getElementById('disconnect_button').style.visibility = 'visible';
         } else {
             document.getElementById('socket_state').value = 'enter login and press connect';
+            document.getElementById('connect_button').style.visibility = 'visible';
+            document.getElementById('disconnect_button').style.visibility = 'hidden';
         }
 }
 
 function connect() {
-    if (!socket)
-        socket = io.connect('http://' + document.domain + ':' + location.port + '/');
+    socket = io.connect('http://' + document.domain + ':' + location.port + '/');
     let login = document.getElementById('login').value;
 
     if (login) {
         socket.emit('auth', login);
         setTimeout(show_state, 200);
     } else {
-        document.getElementById('socket_state').value = 'disconnected';
+        document.getElementById('socket_state').value = 'enter login and press connect';
         document.getElementById('resp_auth').value = 'Please, enter login and press connect';
     }
 }
@@ -50,8 +52,10 @@ socket.on('poll', function (results) {
         } else {
             output += ' spectractor';
         }
-        output += '\n';
+        if (results.indexOf(res) !== results.length - 1)
+            output += '\n';
     }
+    document.getElementById('serv_reply').style.height = (results.length * 25).toString() + 'px';
     document.getElementById('serv_reply').value = output;
 });
 
@@ -60,17 +64,32 @@ function disconnect() {
         socket.emit('disc', myName);
         socket = null;
     }
+    document.getElementById('socket_state').value = 'enter login and press connect';
+    document.getElementById('connect_button').style.visibility = 'visible';
+    document.getElementById('disconnect_button').style.visibility = 'hidden';
     setTimeout(show_state, 200);
+    location.reload();
 }
 
-window.onbeforeunload = function () {
-    disconnect();
-}
+window.addEventListener
+('beforeunload'
+  , function () {
+      disconnect();
+      return null;
+  }
+);
 
 function reset_poll() {
     socket.emit('reset');
 }
 
-function vote() {
-    socket.emit('poll', {'login': myName, 'mark': document.getElementById('mark').value});
+function reset_users() {
+    socket.emit('reset_users')
+}
+
+function vote(mark) {
+    if (mark !== undefined)
+        socket.emit('poll', {'login': myName, 'mark': mark.toString()});
+    else
+        socket.emit('poll', {'login': myName, 'mark': document.getElementById('mark').value});
 }
