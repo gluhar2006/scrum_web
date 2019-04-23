@@ -131,8 +131,7 @@ function disconnect() {
 }
 
 window.addEventListener
-('beforeunload'
-  , function () {
+('beforeunload', function () {
     disconnect();
     return null;
   }
