@@ -10,12 +10,6 @@ let updSizes = function () {
 
   isMobile = window.innerHeight * 1.5 > window.innerWidth;
 
-  // if (isMobile)
-  //   for (elementId in ['vote_0', 'vote_c', 'vote_1', 'vote_2', 'vote_3', 'vote_5', 'vote_8', 'vote_9'])
-  //     document.getElementById(elementId).style.height = '150%';
-  //   for (val in fieldsWidths)
-  //     fieldsWidths[val] *= 1.5;
-
   for (elementId of ['login', 'socket_state', 'serv_reply', 'vote_3', 'vote_5', 'vote_8', 'mark', 'vote_1', 'vote_2', 'vote_9', 'vote_0', 'vote_c'])
     document.getElementById(elementId).style.width = fieldsWidths[0].toString() + '%';
   for (elementId of ['gr_1', 'gr_2', 'resp_auth'])
@@ -27,6 +21,20 @@ let updSizes = function () {
 
 window.onload = function () {
   updSizes();
+
+  document.getElementById('mark').addEventListener("keyup", function(event) {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      vote();
+    }
+  });
+
+  document.getElementById('login').addEventListener("keyup", function(event) {
+    if (event.keyCode === 13) {
+      event.preventDefault();
+      connect();
+    }
+  });
 };
 
 window.onresize = function () {
