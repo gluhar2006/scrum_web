@@ -1,12 +1,15 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO, emit, disconnect
 
+from texts import getText
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!'  # dn wtf is it
 app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # try to disable cache in browser
 socketIO = SocketIO(app)
 
 POSSIBLE_MARKS = ('-1', '0', '1', '2', '3', '5', '8', '9')
+textMarks = dict(zip(POSSIBLE_MARKS, ['clear', 'xz', 1, 2, 3, 5, 8, 'decompose']))
 
 pollResults = dict()
 
@@ -25,18 +28,32 @@ def emitComment():
     nameAndMarkDict = {k: v['mark'] for k, v in pollResults.items()}
     markList = list(nameAndMarkDict.values())
     markListWithNumbers = [int(m) for m in markList if m in POSSIBLE_MARKS[2:-1]]
-    averageMark = sum(markListWithNumbers)/len(markListWithNumbers)
-    msg = f'Voting is over. Average mark is {averageMark}'
     marksCount = len(set(markList))
-    if marksCount == 1:
-        msg = f'Unanimously! {markList[0]}!'
-    elif marksCount == 2 and len(markList) > 2:
+    numMarksCount = len([mark for mark in markList if 1 <= int(mark) <= 8])
+    allMarksAreGood = numMarksCount == len(markList)
+    if marksCount == 1 and allMarksAreGood:
+        msg = f'Unanimously! {markList[0]}! {getText(textMarks[markList[0]])}'
+    elif marksCount == 1:
+        if textMarks[markList[0]] == 'xz':
+            msg = 'Unanimously xz!? Are you kidding me?!?!?!'
+        elif textMarks[markList[0]] == 'decompose':
+            msg = "Ok ... let's decompose that shit"
+        else:
+            msg = f'Unanimously... {textMarks[markList[0]]}.'
+    elif marksCount == 2 and len(markList) == 3:
         for mark in markList:
             if markList.count(mark) == 1:
                 revResults = dict(zip(nameAndMarkDict.values(), nameAndMarkDict.keys()))
                 popularMark = [m for m in markList if m != mark][0]
-                msg = f'All voted {popularMark}, except for {revResults[mark]} - voted {getMark(revResults[mark])}'
-    emit('auth_resp', 'Not sure, but '+msg, broadcast=True)
+                addMsg = getText('one')
+                msg = f'All voted {textMarks[popularMark]}, except for {revResults[mark]} - ' \
+                      f'voted {getMark(revResults[mark])}. {revResults[mark]}, {addMsg}'
+    elif allMarksAreGood:
+        averageMark = sum(markListWithNumbers)/len(markListWithNumbers)
+        msg = f'Voting is over. Average mark is {averageMark}'
+    else:
+        msg = 'Voting is over. Everything is difficult, sort it out yourself'
+    emit('auth_resp', msg, broadcast=True)
 
 
 def emitResults():
@@ -111,7 +128,7 @@ def reset():
 
 
 @socketIO.on('reset_users')
-def reset():
+def resetUsers():
     """
     Need to fix results after disconnect failed or something else
     """

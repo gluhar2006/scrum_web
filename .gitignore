@@ -1,3 +1,5 @@
 dist/*
 scrum_cards.egg-info/*
 venv/*
+.vscode/settings.json
+*.pyc

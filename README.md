@@ -20,6 +20,5 @@ known bugs:
 what I would like to do first:
 
   - add versioning
-  - improve poll results' review
   - clean up python code
   - improve gui for different platforms

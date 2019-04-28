@@ -7,6 +7,7 @@ setup(
     packages=find_packages(exclude=["docs"]),
     zip_safe=False,
     install_requires=[
-        'flask-socketio==3.2.2'
+        'flask-socketio==3.2.2',
+        'gevent-websocket==0.10.1',
     ],
 )
