@@ -1,4 +1,4 @@
-let socket = io.connect('http://' + document.domain + ':' + location.port + '/');
+let socket = new WebSocket('ws://' + document.domain + ':' + location.port + '/ws');
 let myName = null;
 
 setTimeout(show_state, 200);
@@ -42,7 +42,7 @@ window.onresize = function () {
 };
 
 function show_state() {
-  if (socket && socket.connected === true)
+  if (socket && socket.OPEN)
     if (myName !== null) {
       document.getElementById('socket_state').value = 'status: connected';
       document.getElementById('connect_button').style.visibility = 'hidden';
@@ -55,11 +55,10 @@ function show_state() {
 }
 
 function connect() {
-  socket = io.connect('http://' + document.domain + ':' + location.port + '/');
   let login = document.getElementById('login').value;
 
   if (login) {
-    socket.emit('auth', login);
+    socket.send(JSON.stringify({'connect': login}));
     setTimeout(show_state, 200);
     showPool();
   } else {
@@ -78,50 +77,59 @@ function showLogin() {
   $('#sLogin').collapse('show');
 }
 
-socket.on('auth_resp', function (msg) {
-  let name_ = msg['login'];
-  if (name_ !== undefined) {
-    myName = name_;
-    document.getElementById('resp_auth').value = msg.txt + msg.login;
-  } else {
-    document.getElementById('resp_auth').value = msg;
-  }
-});
-
-socket.on('poll', function (results) {
+function getResults(server_reply) {
   let output = '';
-  for (let res of results) {
-    if (res.hasOwnProperty('perc_complete')) {
-      document.getElementById('progressBar').style.width = res['perc_complete'];
-      if (res['perc_complete'] === '100%')
-        $('#progressBar').removeClass().addClass('progress-bar progress-bar-success');
-      else
-        $('#progressBar').removeClass().addClass('progress-bar progress-bar-success progress-bar-striped');
-    }
-    else {
+  let is_over = server_reply["percent_complete"] === 100;
+  for (let res of server_reply["users"]) {
       output += res['name'];
-      if (res['state'] === true) {
-        output += ' ready';
-      } else if (res['state'] === false) {
-        output += ' think';
-      } else if (res['mark']) {
+      if (is_over)
         output += ': ' + res['mark'];
-      } else {
-        output += ' spectractor';
-      }
-      if (results.indexOf(res) !== results.length - 1)
+      else
+        output += res['state'] === 1 ? ' ready' : ' think';
+      if (server_reply["users"].indexOf(res) !== server_reply["users"].length - 1)
         output += '\n';
     }
-  }
-  document.getElementById('serv_reply').style.height = (results.length * 25).toString() + 'px';
-  document.getElementById('serv_reply').value = output;
-});
+  return output;
+}
+
+socket.onmessage = function(event) {
+    let msg = JSON.parse(event.data);
+    if (msg !== undefined) {
+        if (Object.keys(msg)[0] === "connected") {
+           myName = msg["connected"];
+        } else if (myName !== null && Object.keys(msg)[0] === "disconnect") {
+           disconnect();
+           alert(msg["disconnect"] + " reset users. login again");
+        } else if (Object.keys(msg)[0] === "error") {
+           disconnect();
+           alert(msg["error"]);
+        } else {
+            document.getElementById('progressBar').style.width = msg['percent_complete'] + '%';
+            if (msg['perc_complete'] === 100)
+              $('#progressBar').removeClass().addClass('progress-bar progress-bar-success');
+            else
+              $('#progressBar').removeClass().addClass('progress-bar progress-bar-success progress-bar-striped');
+
+            results = getResults(msg);
+            document.getElementById('serv_reply').style.height = (msg["users"].length * 35).toString() + 'px';
+            document.getElementById('serv_reply').value = results;
+
+            document.getElementById('resp_auth').value = msg["text"];
+        }
+    } else {
+        document.getElementById('resp_auth').value = "something goes wrong =(";
+    }
+}
+
+socket.onclose = function(event) {
+    disconnect();
+}
 
 function disconnect() {
-  if (socket) {
-    socket.emit('disc', myName);
-    socket = null;
+  if (socket && socket.OPEN) {
+    socket.send(JSON.stringify({'disconnect': myName}));
   }
+  myName = null;
   document.getElementById('socket_state').value = 'enter login and press connect';
   document.getElementById('connect_button').style.visibility = 'visible';
   document.getElementById('disconnect_button').style.visibility = 'hidden';
@@ -138,16 +146,16 @@ window.addEventListener
 );
 
 function reset_poll() {
-  socket.emit('reset');
+  socket.send(JSON.stringify({'reset': myName}));
 }
 
 function reset_users() {
-  socket.emit('reset_users')
+  socket.send(JSON.stringify({'reset_users': myName}));
+  disconnect();
 }
 
 function vote(mark) {
-  if (mark !== undefined)
-    socket.emit('poll', {'login': myName, 'mark': mark.toString()});
-  else
-    socket.emit('poll', {'login': myName, 'mark': document.getElementById('mark').value});
+  let new_mark = mark !== undefined ? mark.toString() : document.getElementById('mark').value;
+  let data_to_send = {"vote": {"name": myName, "mark": new_mark}};
+  socket.send(JSON.stringify(data_to_send));
 }

@@ -1,159 +1,91 @@
-from flask import Flask, render_template
-from flask_socketio import SocketIO, emit, disconnect
+import os
 
-from texts import getText
+import ujson
+from sanic import Sanic, response
+from websockets import ConnectionClosedOK
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'  # dn wtf is it
-app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0  # try to disable cache in browser
-socketIO = SocketIO(app)
+from classes import User, State
+from texts import get_text
 
-POSSIBLE_MARKS = ('-1', '0', '1', '2', '3', '5', '8', '9')
-textMarks = dict(zip(POSSIBLE_MARKS, ['clear', 'xz', 1, 2, 3, 5, 8, 'decompose']))
+app = Sanic(__name__)
 
-pollResults = dict()
+users: list[User] = []
 
 
-def getMark(name: str):
-    markInPool = pollResults[name]['mark']
-    if markInPool == '0':
-        return 'xz'
-    elif markInPool == '9':
-        return 'decompose'
+async def emit_results():
+    global users
+    if not len(users):
+        res = {"users": [], "text": "waiting for users", "percent_complete": 0}
     else:
-        return markInPool
-
-
-def emitComment():
-    nameAndMarkDict = {k: v['mark'] for k, v in pollResults.items()}
-    markList = list(nameAndMarkDict.values())
-    markListWithNumbers = [int(m) for m in markList if m in POSSIBLE_MARKS[2:-1]]
-    marksCount = len(set(markList))
-    numMarksCount = len([mark for mark in markList if 1 <= int(mark) <= 8])
-    allMarksAreGood = numMarksCount == len(markList)
-    if marksCount == 1 and allMarksAreGood:
-        msg = f'Unanimously! {markList[0]}! {getText(textMarks[markList[0]])}'
-    elif marksCount == 1:
-        if textMarks[markList[0]] == 'xz':
-            msg = 'Unanimously xz!? Are you kidding me?!?!?!'
-        elif textMarks[markList[0]] == 'decompose':
-            msg = "Ok ... let's decompose that shit"
-        else:
-            msg = f'Unanimously... {textMarks[markList[0]]}.'
-    elif marksCount == 2 and len(markList) == 3:
-        for mark in markList:
-            if markList.count(mark) == 1:
-                revResults = dict(zip(nameAndMarkDict.values(), nameAndMarkDict.keys()))
-                popularMark = [m for m in markList if m != mark][0]
-                addMsg = getText('one')
-                msg = f'All voted {textMarks[popularMark]}, except for {revResults[mark]} - ' \
-                      f'voted {getMark(revResults[mark])}. {revResults[mark]}, {addMsg}'
-    elif allMarksAreGood:
-        averageMark = sum(markListWithNumbers)/len(markListWithNumbers)
-        msg = f'Voting is over. Average mark is {averageMark}'
-    else:
-        msg = 'Voting is over. Everything is difficult, sort it out yourself'
-    emit('auth_resp', msg, broadcast=True)
-
-
-def emitResults():
-    global pollResults
-    if len([name for name in pollResults if pollResults[name]['state'] is True]) == len(pollResults):
-        resp = [{'name': name, 'mark': getMark(name)} for name in pollResults]
+        percent_complete = int(100 * len([user for user in users if user.state == State.ready]) / len(users))
+        res = {"users": [user.as_dict() for user in users], "percent_complete": percent_complete,
+               "text": get_text(users) if percent_complete == 100 else "vote in progress"}
+    users_to_disc = []
+    for user in users:
         try:
-            emitComment()
-        except:
-            pass
-        completedPerc = "100%"
-    else:
-        resp = [{'name': name, 'state': pollResults[name]['state']} for name in pollResults]
-        if len(resp):
-            completedPerc = f"{100 * len([q for q in resp if q.get('state')]) / len(pollResults)}%"
-        else:
-            completedPerc = "0%"
-    resp.append({'perc_complete': completedPerc})
-    emit('poll', resp, broadcast=True)
-
-
-def emitBadMark():
-    emit('auth_resp', 'Bad mark. Possible marks are: ' + ','.join(POSSIBLE_MARKS))
-    resp = [{'name': name, 'state': pollResults[name]['state']} for name in pollResults]
-    emit('poll', resp, broadcast=True)
+            await user.ws.send(ujson.dumps(res))
+        except ConnectionClosedOK:
+            users_to_disc.append(user.name)
+            print(f"seems {user.name} disconnected")
+    if users_to_disc:
+        users = [user for user in users if user.name not in users_to_disc]
+        for user in users:
+            await user.ws.send(ujson.dumps(res))
 
 
 @app.route('/')
-def index():
-    return render_template('index.html')
+def handle_request(request):
+    return response.redirect('/index.html')
 
 
-@app.route('/pool')
-def pool_route():
-    return render_template('pool.html')
+async def ws_handler(request, ws):
+    global users
+    while True:
+        data = await ws.recv()
+        try:
+            parsed_data = ujson.loads(data)
+            action = list(parsed_data)[0]
+            if action == "connect":
+                new_user_name = parsed_data[action]
+                user_names = [user.name for user in users]
+                if new_user_name in user_names:
+                    await ws.send(ujson.dumps({"error": "user with this name already exists"}))
+                    print(f"{new_user_name} already exists")
+                else:
+                    new_user = User(new_user_name, ws)
+                    users.append(new_user)
+                    await ws.send(ujson.dumps({"connected": new_user.name}))
+                    print(f"{new_user.name} connected")
+            elif action == "disconnect":
+                user_name = parsed_data[action]
+                users = [user for user in users if user.name != user_name]
+                await ws.send(ujson.dumps({"disconnect": user_name}))
+                print(f"{user_name} disconnected")
+            elif action == "vote":
+                data = parsed_data[action]
+                user_name, mark = data["name"], data["mark"]
+                user = [user for user in users if user.name == user_name][0]
+                user.vote(mark)
+                print(f"{user_name} voted {mark}")
+            elif action == "reset":
+                for user in users:
+                    user.reset_mark()
+                print(f"reset marks by {parsed_data[action]}")
+            elif action == "reset_users":
+                for user in users:
+                    await user.ws.send(ujson.dumps({"disconnect": parsed_data[action]}))
+                users = []
+                print(f"reset users by {parsed_data[action]}")
+            else:
+                print("wrong action")
+            await emit_results()
+        except Exception as e:
+            print(str(e))
+            print(data)
 
 
-@socketIO.on('auth')
-def auth(login):
-    global pollResults
-    if login.capitalize() not in pollResults:
-        resp = {'txt': 'Hello, ', 'login': login.capitalize()}
-        pollResults[login.capitalize()] = {'mark': False, 'state': False}
-        emit('auth_resp', resp)
-        emitResults()
-    else:
-        emit('auth_resp', f'{login} already exists')
-
-
-@socketIO.on('disc')
-def disc(login):
-    global pollResults
-    try:
-        pollResults.pop(str(login))
-    except:
-        pass
-    finally:
-        emitResults()
-        disconnect()
-
-
-@socketIO.on('reset')
-def reset():
-    """
-    Clear all marks for all users
-    """
-    global pollResults
-    for name in pollResults:
-        pollResults[name] = {'state': False, 'mark': False}
-    emitResults()
-    emit('auth_resp', 'New poll has been started', broadcast=True)
-
-
-@socketIO.on('reset_users')
-def resetUsers():
-    """
-    Need to fix results after disconnect failed or something else
-    """
-    global pollResults
-    pollResults = dict()
-    emitResults()
-
-
-@socketIO.on('poll')
-def poll(data):
-    login = data.get('login')
-    if not login:
-        emit('auth_resp', 'please, enter your name and reconnect')
-    else:
-        mark = data.get('mark')
-        if mark is None or mark not in POSSIBLE_MARKS:
-            pollResults[login] = {'state': False, 'mark': False}
-            emitBadMark()
-        elif mark == '-1':
-            pollResults[login] = {'state': False, 'mark': False}
-            emitResults()
-        else:
-            pollResults[login] = {'state': True, 'mark': mark}
-            emitResults()
-
+app.static('/', os.path.join(os.path.abspath('.'), 'static'))
+app.add_websocket_route(ws_handler, '/ws')
 
 if __name__ == '__main__':
-    socketIO.run(app, debug=True, host='0.0.0.0')
+    app.run(host='0.0.0.0', port=5001)
