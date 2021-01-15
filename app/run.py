@@ -86,6 +86,7 @@ async def ws_handler(request, ws):
 
 app.static('/', os.path.join(os.path.abspath('.'), 'static'))
 app.add_websocket_route(ws_handler, '/ws')
+app.config['WEBSOCKET_PING_INTERVAL'] = None
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001)
